@@ -6,18 +6,24 @@ import { Input } from "@/app/ui/user-input"
 import { ScrollArea } from "@/app/ui/scroll-area"
 import { PlusIcon, SendIcon } from 'lucide-react'
 
+interface Chat {
+  id: number;
+  name: string;
+  messages: Array<{ role: 'user' | 'assistant', content: string }>;
+}
+
 export default function ChatInterface() {
-  const [chats, setChats] = useState([{ id: 1, name: 'New chat' }])
-  const [activeChat, setActiveChat] = useState(1)
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([])
+  const [chats, setChats] = useState<Chat[]>([{ id: 1, name: 'New chat', messages: [] }])
+  const [activeChat, setActiveChat] = useState(1)
   const [input, setInput] = useState('')
 
   //adding a new chat, new chats would include a message chain, id, and things like that
   const handleNewChat = () => {
-    const newChat = { id: chats.length + 1, name: 'New chat' }
+    const newChat: Chat = { id: chats.length + 1, name: `New chat ${chats.length + 1}`, messages: [] }
     setChats([...chats, newChat])
     setActiveChat(newChat.id)
-    setMessages([])
+    setInput('')
   }
 
   //gets the model text generation based on the prompt
@@ -45,7 +51,7 @@ export default function ChatInterface() {
   //fetch()
 
   // Function to send data
-const clickmodelFetch = async (url = 'http://localhost:1337/clickmodel', data = {}) => {
+const FetchJsonInfoDefaultclickmodel = async (url = 'http://localhost:1337/clickmodel', data = {}) => {
   try {
     const response = await fetch(url, {
       method: 'POST', // Set the method to POST
@@ -69,18 +75,16 @@ const clickmodelFetch = async (url = 'http://localhost:1337/clickmodel', data = 
 };
 
   //async waits a bit
-
-  //get the ai model id from click model in back end
-  let currAI = clickmodelFetch();
-  //get the number from the string after the first 4 letters (chat) since that's the number for chat id
-  let chatID = {} 
+//
+  //const 
+  
   //add later, id = number, delete deletes a chat, but we keep incrementing based on the previous item
   //saved array on my side, and ill send that chat id for the over aspect
 
   // Function to fetch data and get 'msg' element
 const fetchMsg = async (host: string) => {
   try {
-    const response = await fetch(host);
+    const response: any = await fetch(host);
 
     // Check if the response is OK
     if (!response.ok) {
@@ -96,36 +100,68 @@ const fetchMsg = async (host: string) => {
     console.error('Error fetching data:', error);
     return null; // Return null in case of error
   }
-};
+}
+
+  //updates backend every time a tab is made
+  const onUpdateTab = (updatedValue) => {
+    let newChatTabs = setChats;
+    return newChatTabs;
+  }
+
+  //updates backend every time a message is done
+  const onUpdateMsg = (newMsgInfo) => {
+    fetch('http://localhost:1337/msgupdate', )
+  }
+
+  //gets the lists from json for switching AI models, this is going to be a constant and not used b/c too hard
+  const getitem = (fetchedObject: string) => {
+    fetch(fetchedObject)
+        .then((response) => response.json())
+        .then(())
+        .catch((error) => console.error("Error fetching data:", error));
+    }, []);
+  }
 
   //receives and sends the messages based on the received prompts
   const handleSend = async () => {
-    if (input.trim() === '') return;
+    if (input.trim() === '') return
+
+    const updatedChats = chats.map(chat => {
+      if (chat.id === activeChat) {
+        const newMessages = [...chat.messages, { role: 'user' as const, content: input }]
+        return { ...chat, messages: newMessages }
+      }
+      return chat
+    })
   
-    const newMessages = [...messages, { role: 'user', content: input }];
-  
-    setMessages(newMessages);
-    setInput('');
-  
+    let currAI = await clickmodelFetch('http://localhost:1337/clickmodel')
+    currAI[""]
+
     let timestamp: string = [new Date().getHours(), new Date().getMinutes(), new Date().getSeconds()].join();
     let addMessageToDatabase = {
-      id: chatID,
-      msg: input, // this is one message prompt
+      id: activeChat,
+      msg: Input, // this is one message prompt
       name: 'user',
-      ai: currAI,
+      ai: currAI, //get from backend
       time: timestamp
     };
   
     let hostInfoonmsg = 'http://localhost:1337/onmsg';
   
     // Simulating a response from the backend
-    setTimeout(async () => {
-      const assistantMessage = await fetchMsg(hostInfoonmsg); // Await the fetchMsg
-      setMessages([...newMessages, { role: 'assistant', content: assistantMessage || '' }]); // Use the resolved message
-    }, 1000);
+    setTimeout(() => {
+      const responseChats = updatedChats.map(chat => {
+        if (chat.id === activeChat) {
+          const newMessages = [...chat.messages, { role: 'assistant' as const, content: 'This is a simulated response from the AI.' }]
+          return { ...chat, messages: newMessages }
+        }
+        return chat
+      })
+      setChats(responseChats)
+    }, 1000)
+  }
   };
   
-
 
 
   return (
@@ -141,7 +177,7 @@ const fetchMsg = async (host: string) => {
             <Button
               key={chat.id}
               variant={activeChat === chat.id ? "secondary" : "ghost"}
-              className="w-full justify-start mb-2"
+              className={activeChat === chat.id ? "w-full justify-start mb-2 bg-secondary text-secondary-foreground hover:bg-secondary/80" : "w-full justify-start mb-2 hover:bg-accent hover:text-accent-foreground"} //
               onClick={() => setActiveChat(chat.id)}
             >
               {chat.name}
@@ -184,6 +220,6 @@ const fetchMsg = async (host: string) => {
           </div>
         </div>
       </div>
-    </div>
+    </div>  
   )
 }
