@@ -1,7 +1,11 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const OpenAI = require('openai')
+require('dotenv').config();
 
+const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
+/*
 const { Configuration, OpenAIApi } = require("openai");
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -9,7 +13,7 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 const conversationContextPrompt = "Behave like you are a therapist";
-
+*/
 app.use(express.json());
 // Enable CORS for all routes (or restrict it to specific origins)
 app.use(
@@ -112,32 +116,36 @@ app.post("/onclick", async (req, res) => {
   }
 });
 
-app.post("/onupdate", (req, res) => {
-  //req is sent as a singular number from 1 to n that clarifies the index of the chat
-  const numastring = String(req.body.number);
+app.post("/onupdate", async (req, res) => {
+  try {
+    //req is sent as a singular number from 1 to n that clarifies the index of the chat
+    const numastring = String(req.body.id);
+    const aistring = String(req.body.ai);
+    const name = "chat" + numastring;
+
+    const data = await getfromcollection(name, aistring);
+    console.log("Fetched Data:", JSON.stringify(data, null, 2));
+    res.status(200).json(data);
+  } catch (err) {
+    console.error("Error getting data on hover:", err);
+    throw err;
+  }
 });
 
-app.post("/onmsg", (req, res) => {
+app.post("/omg", (req, res) => {
   try {
     //req is sent as a json pckg with id, msg, who, time
     const message = req.body.message;
 
     // Calling the OpenAI API to complete the message
-    openai
-      .createCompletion({
+    openai.chat.completions.create({
         model: "ft:gpt-4o-mini-2024-07-18:concentration::ACeakFmi",
         // Adding the conversation context to the message being sent
-        prompt: message,
-        temperature: 0.9,
-        max_tokens: 150,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0.6,
-        stop: [" Human:", " AI:"],
+        messages: [{role: 'user', content: message}]
       })
       .then((response) => {
         // Sending the response data back to the client
-        res.send(response.data.choices);
+        res.send(response.choices[0].message);
       });
     // const numastring = String(data.id);
     // const aistring = String(data.ai);
@@ -158,7 +166,7 @@ app.post("/onmsg", (req, res) => {
   }
 });
 
-app.put("/onmsg", (req, res) => {
+app.post("/onmsg", (req, res) => {
   try {
     //req is sent as a json pckg with id, msg, who, time
     const data = req.body;
@@ -175,6 +183,29 @@ app.put("/onmsg", (req, res) => {
     const database = client.db("msg_history" + aistring);
     const collection = database.collection(nam);
     collection.insertOne(document);
+
+    openai.chat.completions.create({
+      model: "ft:gpt-4o-mini-2024-07-18:concentration::ACeakFmi",
+      // Adding the conversation context to the message being sent
+      messages: [{role: 'user', content: msg}]
+    })
+    .then((response) => {
+      const name = 'ai';
+      const msg = response.choices[0].message.content;
+
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0'); // Get hours and pad with zero if needed
+      const minutes = String(now.getMinutes()).padStart(2, '0'); // Get minutes and pad with zero if needed
+      const seconds = String(now.getSeconds()).padStart(2, '0'); // Get seconds and pad with zero if needed
+
+      const time = `${hours}:${minutes}:${seconds}`;
+
+      const adocument = { name, msg, time };
+      
+      // Sending the response data back to the client
+      res.status(200).json(adocument);
+    });
+
   } catch (err) {
     console.error("Error getting data on hover:", err);
     throw err;
@@ -199,27 +230,32 @@ app.get("/plusmodel", async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-app.post('/clickmodel', async(req, res)=>{
-  try{
-=======
-app.get("/clickmodel", async (req, res) => {
+app.post("/clickmodel", async (req, res) => {
   try {
->>>>>>> e41c8064f9c4c5abff917c7839b763f2c713d5e7
     const aistring = String(req.body.name);
 
     const database = client.db("models");
     const collection = database.collection(aistring);
 
+    // Fetch documents from the collection with the projection for 'id' field
     const documents = await collection
-      .find({}, { projection: { id: 1 } })
+      .find({}, { projection: { id: 1, _id: 0 } }) // Only include 'id' and exclude '_id'
       .toArray();
 
-    // Return the documents with only the 'id' field
-    res.status(200).json(documents);
+    // Get all collections in the 'models' database
+    const firstId = documents.length > 0 ? documents[0].id : null;
+    const datab = client.db('msg_history' + firstId)
+    const collections = await datab.listCollections().toArray();
+    const collectionNames = collections.map((collection) => collection.name); // Extract collection names
+
+    // Return both documents and the list of collection names
+    res.status(200).json({
+      documents,        // Array of documents with only 'id'
+      collections: collectionNames, // Array of collection names
+    });
   } catch (err) {
-    console.error("Error getting data on hover:", err);
-    throw err;
+    console.error("Error getting data:", err);
+    res.status(500).json({ error: "Failed to fetch data" }); // Respond with an error status and message
   }
 });
 
