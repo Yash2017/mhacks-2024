@@ -20,20 +20,113 @@ export default function ChatInterface() {
     setMessages([])
   }
 
+  //gets the model text generation based on the prompt
+  /*fetch('http://localhost:1337/onclick', {
+    method: 'POST', // Ensure you're using the correct HTTP method
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        id: '1',
+        ai: '1',
+    }),
+})
+.then(response => {
+    console.log('Response Status:', response.status); // Log the status
+    return response.json(); // Parse the JSON response
+})
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));*/
+  //requires ai number, id of the message channel, and 
+    //json's last item is chat id
+    
+  
+
+  //fetch()
+
+  // Function to send data
+const clickmodelFetch = async (url = 'http://localhost:1337/clickmodel', data = {}) => {
+  try {
+    const response = await fetch(url, {
+      method: 'POST', // Set the method to POST
+      headers: {
+        'Content-Type': 'application/json', // Specify content type as JSON
+      },
+      body: JSON.stringify(data), // Convert the data to JSON
+    });
+
+    // Check if the response is OK (status in the range 200-299)
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const responseData = await response.json(); // Parse JSON response
+    return responseData; // Return the response data
+  } catch (error) {
+    console.error('Error:', error);
+    return null; // Return null in case of error
+  }
+};
+
+  //async waits a bit
+
+  //get the ai model id from click model in back end
+  let currAI = clickmodelFetch();
+  //get the number from the string after the first 4 letters (chat) since that's the number for chat id
+  let chatID = {} 
+  //add later, id = number, delete deletes a chat, but we keep incrementing based on the previous item
+  //saved array on my side, and ill send that chat id for the over aspect
+
+  // Function to fetch data and get 'msg' element
+const fetchMsg = async (host: string) => {
+  try {
+    const response = await fetch(host);
+
+    // Check if the response is OK
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json(); // Parse JSON response
+
+    // Use a lambda function to return the message
+    const getMessage = (msg: string): string => msg; // Lambda function to return the message
+    return getMessage(data.msg); // Return the 'msg' element
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return null; // Return null in case of error
+  }
+};
+
   //receives and sends the messages based on the received prompts
   const handleSend = async () => {
     if (input.trim() === '') return;
-
-    const newMessages = [...messages, { role: 'user', content: input }]
-    //issue in pages, see pages to fix
-    setMessages(newMessages)
-    setInput('')
-
+  
+    const newMessages = [...messages, { role: 'user', content: input }];
+  
+    setMessages(newMessages);
+    setInput('');
+  
+    let timestamp: string = [new Date().getHours(), new Date().getMinutes(), new Date().getSeconds()].join();
+    let addMessageToDatabase = {
+      id: chatID,
+      msg: input, // this is one message prompt
+      name: 'user',
+      ai: currAI,
+      time: timestamp
+    };
+  
+    let hostInfoonmsg = 'http://localhost:1337/onmsg';
+  
     // Simulating a response from the backend
-    setTimeout(() => {
-      setMessages([...newMessages, { role: 'assistant', content: 'This is a simulated response from the AI.' }])
-    }, 1000)
-  }
+    setTimeout(async () => {
+      const assistantMessage = await fetchMsg(hostInfoonmsg); // Await the fetchMsg
+      setMessages([...newMessages, { role: 'assistant', content: assistantMessage || '' }]); // Use the resolved message
+    }, 1000);
+  };
+  
+
+
 
   return (
     <div className="flex w-full">
