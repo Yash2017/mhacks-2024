@@ -109,7 +109,7 @@ export default function FullPageChat() {
       messages: [
         {
           content:
-            "Hello! I am your mental therapist. How can I help you today?",
+            "Hello! I am your mental assistant. How can I help you today?",
           role: "system",
         },
       ],
