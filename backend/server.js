@@ -1,10 +1,10 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const OpenAI = require('openai')
-require('dotenv').config();
+const OpenAI = require("openai");
+require("dotenv").config();
 
-const openai = new OpenAI({apiKey: process.env.OPENAI_API_KEY});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 /*
 const { Configuration, OpenAIApi } = require("openai");
 const configuration = new Configuration({
@@ -18,9 +18,10 @@ app.use(express.json());
 // Enable CORS for all routes (or restrict it to specific origins)
 app.use(
   cors({
-    origin: "http://localhost:3000", // Allow only this origin
+    origin: "*", // Allow only this origin
     methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed methods if needed
-    credentials: true, // Enable credentials (if needed)
+    credentials: false, // Enable credentials (if needed)
+    allowedHeaders: ["Content-Type"],
   })
 );
 
@@ -138,10 +139,11 @@ app.post("/omg", (req, res) => {
     const message = req.body.message;
 
     // Calling the OpenAI API to complete the message
-    openai.chat.completions.create({
+    openai.chat.completions
+      .create({
         model: "ft:gpt-4o-mini-2024-07-18:concentration::ACeakFmi",
         // Adding the conversation context to the message being sent
-        messages: [{role: 'user', content: message}]
+        messages: [{ role: "user", content: message }],
       })
       .then((response) => {
         // Sending the response data back to the client
@@ -170,49 +172,49 @@ app.post("/onmsg", async (req, res) => {
   try {
     //req is sent as a json pckg with id, msg, who, time
     const data = req.body;
-    const numastring = String(data.id);
-    const aistring = String(data.ai);
-    const nam = "chat" + numastring;
+    // const numastring = String(data.id);
+    // const aistring = String(data.ai);
+    // const nam = "chat" + numastring;
 
-    const name = data.name;
-    const msg = data.msg;
-    const time = data.time;
+    // const name = data.name;
+    // const msg = data.msg;
+    // const time = data.time;
 
-    const na = "chat" + numastring;
-    const dat = await getfromcollection(na, aistring);
-    const contextString = 'with context: ' + dat.map(item => `${item.name}: ${item.msg}`).join(', ') + 'answer this: ' + msg;
-    console.log(contextString);
+    // const na = "chat" + numastring;
+    // const dat = await getfromcollection(na, aistring);
+    // const contextString = 'with context: ' + dat.map(item => `${item.name}: ${item.msg}`).join(', ') + 'answer this: ' + msg;
+    // console.log(contextString);
 
-    const document = { name, msg, time };
+    // const document = { name, msg, time };
 
-    const database = client.db("msg_history" + aistring);
-    const collection = database.collection(nam);
-    collection.insertOne(document);
+    // const database = client.db("msg_history" + aistring);
+    // const collection = database.collection(nam);
+    // collection.insertOne(document);
 
-    openai.chat.completions.create({
-      model: "ft:gpt-4o-mini-2024-07-18:concentration::ACeakFmi",
-      // Adding the conversation context to the message being sent
-      messages: [{role: 'user', content: contextString}]
-    })
-    .then((response) => {
-      const name = 'ai';
-      const msg = response.choices[0].message.content;
+    openai.chat.completions
+      .create({
+        model: "ft:gpt-4o-mini-2024-07-18:concentration::ACeakFmi",
+        // Adding the conversation context to the message being sent
+        messages: [{ role: "system", content: data.message }],
+      })
+      .then((response) => {
+        const name = "ai";
+        const msg = response.choices[0].message;
 
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0'); // Get hours and pad with zero if needed
-      const minutes = String(now.getMinutes()).padStart(2, '0'); // Get minutes and pad with zero if needed
-      const seconds = String(now.getSeconds()).padStart(2, '0'); // Get seconds and pad with zero if needed
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, "0"); // Get hours and pad with zero if needed
+        const minutes = String(now.getMinutes()).padStart(2, "0"); // Get minutes and pad with zero if needed
+        const seconds = String(now.getSeconds()).padStart(2, "0"); // Get seconds and pad with zero if needed
 
-      const time = `${hours}:${minutes}:${seconds}`;
+        const time = `${hours}:${minutes}:${seconds}`;
 
-      const adocument = { name, msg, time };
+        const adocument = { name, msg, time };
 
-      collection.insertOne(adocument)
+        //collection.insertOne(adocument);
 
-      // Sending the response data back to the client
-      res.status(200).json(adocument);
-    });
-
+        // Sending the response data back to the client
+        res.status(200).json(adocument);
+      });
   } catch (err) {
     console.error("Error getting data on hover:", err);
     throw err;
@@ -251,13 +253,13 @@ app.post("/clickmodel", async (req, res) => {
 
     // Get all collections in the 'models' database
     const firstId = documents.length > 0 ? documents[0].id : null;
-    const datab = client.db('msg_history' + firstId)
+    const datab = client.db("msg_history" + firstId);
     const collections = await datab.listCollections().toArray();
     const collectionNames = collections.map((collection) => collection.name); // Extract collection names
 
     // Return both documents and the list of collection names
     res.status(200).json({
-      documents,        // Array of documents with only 'id'
+      documents, // Array of documents with only 'id'
       collections: collectionNames, // Array of collection names
     });
   } catch (err) {

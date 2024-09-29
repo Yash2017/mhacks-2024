@@ -1,4 +1,4 @@
-import { FullPageChat } from "@/components/full-page-chat";
+import FullPageChat from "@/components/full-page-chat";
 
 export default function Home() {
   return (
