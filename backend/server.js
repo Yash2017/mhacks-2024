@@ -25,11 +25,11 @@ async function testconnection() {
 
 testconnection().catch(console.dir);
 
-async function getfromcollection(collectionname) {
+async function getfromcollection(collectionname, aistring) {
     try {
         await client.connect();
         const db = client.db('msg_history');
-        const collection = db.collection(collectionname);
+        const collection = db.collection(collectionname+aistring);
   
         const elements = await collection.find({}).toArray();
         return elements;
@@ -45,9 +45,9 @@ app.put('/newchat',(req, res)=>{
         //req is sent as a singular number from 1 to n that clarifies the index of the chat
         const numastring = String(req.body.id);
         const aistring = String(req.body.ai);
-        const name = aistring + 'chat' + numastring;
+        const name = 'chat' + numastring;
 
-        const database = client.db('msg_history');
+        const database = client.db('msg_history' + aistring);
         database.createCollection(name);
     } catch (err) {
         console.error("Error making a new chat:", err);
@@ -60,12 +60,12 @@ app.get('/onhover',(req, res)=>{
         //req is sent as a singular number from 1 to n that clarifies the index of the chat
         const numastring = String(req.body.id);
         const aistring = String(req.body.ai);
-        const name = aistring + 'chat' + numastring;
+        const name = 'chat' + numastring;
 
-        const database = client.db('msg_history');
+        const database = client.db('msg_history'+aistring);
         const collection = database.collection(name);
 
-        const data = getfromcollection(name); //somehow shorten this!!!!
+        const data = getfromcollection(name, aistring); //somehow shorten this!!!!
         res.status(200).json(data);
     } catch (err) {
         console.error("Error getting data on hover:", err);
@@ -78,9 +78,9 @@ app.get('/onclick',(req, res)=>{
         //req is sent as a singular number from 1 to n that clarifies the index of the chat
         const numastring = String(req.body.id);
         const aistring = String(req.body.ai);
-        const name = aistring + 'chat' + numastring;
+        const name = 'chat' + numastring;
 
-        const database = client.db('msg_history');
+        const database = client.db('msg_history' + aistring);
         const collection = database.collection(name);
 
         const data = getfromcollection(name);
@@ -118,6 +118,41 @@ app.post('/onmsg',(req, res)=>{
         console.error("Error getting data on hover:", err);
         throw err;
     }
+});
+
+app.get('/plusmodel',(req, res)=>{
+  try{
+    const database = client.db('models');
+    const collections = database.listCollections().toArray();
+
+    const collectionsData = [];
+
+    for (const collection of collections) {
+      const aiid = aiid.id;
+
+      // Access the collection and retrieve all documents
+      const collectionDocuments = database.collection(aiid).find().toArray();
+
+      // Add the collection name and its documents to the array
+      collectionsData.push({
+        collection: aiid,
+        documents: collectionDocuments
+      });
+    }
+
+    res.json(collectionsData);
+
+  } catch (err) {
+    console.error("Error getting data on hover:", err);
+    throw err;
+  }
+});
+
+app.get('/clickmodel',(req, res)=>{
+  //req is sent as a singular number from 1 to n that clarifies the ai
+  const aiid = String(req.body.ai);
+  
+
 });
 
 const port = process.env.PORT || 3000; // You can use environment variables for port configuration
