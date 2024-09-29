@@ -103,7 +103,7 @@ app.post('/onmsg',(req, res)=>{
         const data = req.body;
         const numastring = String(data.id);
         const aistring = String(data.ai);
-        const nam = aistring + 'chat' + numastring;
+        const nam = 'chat' + numastring;
 
         const name = data.name;
         const msg = data.msg;
@@ -111,7 +111,7 @@ app.post('/onmsg',(req, res)=>{
 
         const document = {name, msg, time,};
         
-        const database = client.db('msg_history');
+        const database = client.db('msg_history' + aistring);
         const collection = database.collection(nam);
         collection.insertOne(document);
     } catch (err) {
@@ -150,7 +150,8 @@ app.get('/plusmodel',(req, res)=>{
 
 app.get('/clickmodel',(req, res)=>{
   //req is sent as a singular number from 1 to n that clarifies the ai
-  const aiid = String(req.body.ai);
+  const database = client.db('models');
+  
   
 
 });
