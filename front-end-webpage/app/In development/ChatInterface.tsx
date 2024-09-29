@@ -1,13 +1,15 @@
+'use client'
+
 import { useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/app/In development/ui/button"
+import { Input } from "@/app/In development/ui/user-input"
+import { ScrollArea } from "@/app/In development/ui/scroll-area"
 import { PlusIcon, SendIcon } from 'lucide-react'
 
-export default function Component() {
+export default function ChatInterface() {
   const [chats, setChats] = useState([{ id: 1, name: 'New chat' }])
   const [activeChat, setActiveChat] = useState(1)
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([])
   const [input, setInput] = useState('')
 
   const handleNewChat = () => {
@@ -21,6 +23,7 @@ export default function Component() {
     if (input.trim() === '') return
 
     const newMessages = [...messages, { role: 'user', content: input }]
+    //issue in pages, see pages to fix
     setMessages(newMessages)
     setInput('')
 
@@ -31,7 +34,7 @@ export default function Component() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-r from-white via-blue-100 to-white">
+    <div className="flex w-full">
       {/* Sidebar */}
       <div className="w-64 bg-gray-900 text-white p-4 flex flex-col">
         <Button onClick={handleNewChat} className="mb-4 flex items-center justify-center gap-2">
