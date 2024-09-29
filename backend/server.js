@@ -43,8 +43,9 @@ async function getfromcollection(collectionname) {
 app.put('/newchat',(req, res)=>{
     try {
         //req is sent as a singular number from 1 to n that clarifies the index of the chat
-        const numastring = String(req.body.number);
-        const name = 'chat' + numastring;
+        const numastring = String(req.body.id);
+        const aistring = String(req.body.ai);
+        const name = aistring + 'chat' + numastring;
 
         const database = client.db('msg_history');
         database.createCollection(name);
@@ -57,8 +58,9 @@ app.put('/newchat',(req, res)=>{
 app.get('/onhover',(req, res)=>{
     try {
         //req is sent as a singular number from 1 to n that clarifies the index of the chat
-        const numastring = String(req.body.number);
-        const name = 'chat' + numastring;
+        const numastring = String(req.body.id);
+        const aistring = String(req.body.ai);
+        const name = aistring + 'chat' + numastring;
 
         const database = client.db('msg_history');
         const collection = database.collection(name);
@@ -74,8 +76,9 @@ app.get('/onhover',(req, res)=>{
 app.get('/onclick',(req, res)=>{
     try {
         //req is sent as a singular number from 1 to n that clarifies the index of the chat
-        const numastring = String(req.body.number);
-        const name = 'chat' + numastring;
+        const numastring = String(req.body.id);
+        const aistring = String(req.body.ai);
+        const name = aistring + 'chat' + numastring;
 
         const database = client.db('msg_history');
         const collection = database.collection(name);
@@ -98,17 +101,18 @@ app.post('/onmsg',(req, res)=>{
     try{
         //req is sent as a json pckg with id, msg, who, time
         const data = req.body;
-        const numastring = String(data.number);
-        const name = 'chat' + numastring;
+        const numastring = String(data.id);
+        const aistring = String(data.ai);
+        const nam = aistring + 'chat' + numastring;
 
-        const n = data.name;
+        const name = data.name;
         const msg = data.msg;
         const time = data.time;
 
-        const document = {n, msg, time,};
+        const document = {name, msg, time,};
         
         const database = client.db('msg_history');
-        const collection = database.collection(name);
+        const collection = database.collection(nam);
         collection.insertOne(document);
     } catch (err) {
         console.error("Error getting data on hover:", err);
