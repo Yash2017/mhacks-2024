@@ -116,7 +116,7 @@ app.post("/onclick", async (req, res) => {
   }
 });
 
-app.post("/onupdate", async (req, res) => {
+app.post("/msgupdate", async (req, res) => {
   try {
     //req is sent as a singular number from 1 to n that clarifies the index of the chat
     const numastring = String(req.body.id);
@@ -258,6 +258,25 @@ app.post("/clickmodel", async (req, res) => {
     // Return both documents and the list of collection names
     res.status(200).json({
       documents,        // Array of documents with only 'id'
+      collections: collectionNames, // Array of collection names
+    });
+  } catch (err) {
+    console.error("Error getting data:", err);
+    res.status(500).json({ error: "Failed to fetch data" }); // Respond with an error status and message
+  }
+});
+
+app.post("/chatupdate", async (req, res) => {
+  try {
+    const aistring = String(req.body.ai);
+
+    const database = client.db("msg_history" + aistring);
+
+    const collection = await database.listCollections().toArray();
+    const collectionNames = collection.map((collection) => collection.name); // Extract collection names
+
+    // Return both documents and the list of collection names
+    res.status(200).json({
       collections: collectionNames, // Array of collection names
     });
   } catch (err) {
