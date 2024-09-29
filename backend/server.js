@@ -130,6 +130,26 @@ app.post('/onmsg',(req, res)=>{
   }
 });
 
+app.post('/getchats', async (req, res) => {
+  try {
+    // req is sent as a JSON package with aiid
+    const aistring = String(req.body.ai);
+
+    const database = client.db('msg_history' + aistring);
+    
+    // Get the list of collections in the database
+    const collections = await database.listCollections().toArray();
+
+    // Map to get only the collection names (or any other detail you want)
+    const collectionNames = collections.map(collection => collection.name);
+
+    res.status(200).json(collectionNames);
+  } catch (err) {
+    console.error("Error getting data on hover:", err);
+    res.status(500).json({ error: 'Failed to fetch collections' });
+  }
+});
+
 app.put('/onmsg',(req, res)=>{
     try{
         //req is sent as a json pckg with id, msg, who, time
@@ -172,7 +192,7 @@ app.get('/plusmodel', async (req, res) => {
   }
 });
 
-app.get('/clickmodel', async(req, res)=>{
+app.post('/clickmodel', async(req, res)=>{
   try{
     const aistring = String(req.body.name);
 
