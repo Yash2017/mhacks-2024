@@ -108,7 +108,7 @@ app.post("/onclick", async (req, res) => {
     const name = "chat" + numastring;
 
     const data = await getfromcollection(name, aistring);
-    console.log("Fetched Data:", JSON.stringify(data, null, 2));
+
     res.status(200).json(data);
   } catch (err) {
     console.error("Error getting data on hover:", err);
@@ -166,7 +166,7 @@ app.post("/omg", (req, res) => {
   }
 });
 
-app.post("/onmsg", (req, res) => {
+app.post("/onmsg", async (req, res) => {
   try {
     //req is sent as a json pckg with id, msg, who, time
     const data = req.body;
@@ -178,6 +178,11 @@ app.post("/onmsg", (req, res) => {
     const msg = data.msg;
     const time = data.time;
 
+    const na = "chat" + numastring;
+    const dat = await getfromcollection(na, aistring);
+    const contextString = 'with context: ' + dat.map(item => `${item.name}: ${item.msg}`).join(', ') + 'answer this: ' + msg;
+    console.log(contextString);
+
     const document = { name, msg, time };
 
     const database = client.db("msg_history" + aistring);
@@ -187,7 +192,7 @@ app.post("/onmsg", (req, res) => {
     openai.chat.completions.create({
       model: "ft:gpt-4o-mini-2024-07-18:concentration::ACeakFmi",
       // Adding the conversation context to the message being sent
-      messages: [{role: 'user', content: msg}]
+      messages: [{role: 'user', content: contextString}]
     })
     .then((response) => {
       const name = 'ai';
@@ -201,7 +206,9 @@ app.post("/onmsg", (req, res) => {
       const time = `${hours}:${minutes}:${seconds}`;
 
       const adocument = { name, msg, time };
-      
+
+      collection.insertOne(adocument)
+
       // Sending the response data back to the client
       res.status(200).json(adocument);
     });
